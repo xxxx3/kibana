@@ -18,8 +18,9 @@
  */
 
 import * as Either from './either';
-import { fromNullable } from './maybe';
+import { fromNullable, just } from './maybe';
 import { always, id, noop } from './utils';
+import { exactMatch, rootMatch, isGlob, globMatch } from './matching';
 
 const maybeTotal = (x) => (x === 'total' ? Either.left(x) : Either.right(x));
 
@@ -97,6 +98,14 @@ export const coveredFilePath = (obj) => {
     .fold(withoutCoveredFilePath, (coveredFilePath) => ({ ...obj, coveredFilePath }));
 };
 
+export const teamAssignment = (teamAssignments) => (obj) => {
+  const name = rootMatch(2)(teamAssignments)(obj);
+
+  return {
+    team: name,
+    ...obj,
+  };
+};
 export const ciRunUrl = (obj) =>
   Either.fromNullable(process.env.CI_RUN_URL).fold(always(obj), (ciRunUrl) => ({
     ...obj,
@@ -132,7 +141,6 @@ export const itemizeVcs = (vcsInfo) => (obj) => {
     ? `${comparePrefix()}/${process.env.FETCHED_PREVIOUS}...${sha}`
     : 'PREVIOUS SHA NOT PROVIDED';
 
-  // const withoutPreviousL = always({ ...obj, vcs });
   const withPreviousR = () => ({
     ...obj,
     vcs: {
